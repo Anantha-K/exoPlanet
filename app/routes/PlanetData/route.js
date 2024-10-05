@@ -41,9 +41,8 @@ export async function POST(NextRequest) {
         
 
         return NextResponse.json(
-            { 
-                data: newPlanet
-            },
+            
+                newPlanet,
             { status: 201 }
         )
     } catch (error) {
