@@ -13,7 +13,7 @@ const AIChat = ({ selectedPlanet }) => {
     const askQuestion = async () => {
         try {
             setLoading(true);
-            const genAI = new GoogleGenerativeAI('AIzaSyCKTBcLF1kPRRWoQEGSU6JR09392HenSlw');
+            const genAI = new GoogleGenerativeAI(process.env.Google_API);
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const prompt = `You are an AI assistant called ExoBot specializing in exoplanets.
                 The user is asking about ${selectedPlanet}.

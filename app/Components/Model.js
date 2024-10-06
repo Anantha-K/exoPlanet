@@ -163,7 +163,7 @@ const Model = () => {
       }
       
       const data = await response.json();
-      setHabitability(data.habitability);
+      // setHabitability(data.habitability);
     } catch (error) {
       console.error("Error checking habitability:", error);
     } finally {
@@ -254,13 +254,7 @@ const StatItem = ({ icon: Icon, label, value, unit = "", isHabitability = false 
           <StatItem icon={Trees} label="Vegetation" value={planetValues.vegetation} unit="%" />
           <StatItem icon={Waypoints} label="Sun Proximity" value={planetValues.sunProximity} />
           <StatItem icon={Ruler} label="Size" value={planetValues.size.toFixed(2)} unit="x Earth" />
-          <StatItem 
-            icon={Dna} 
-            label="Habitability" 
-            value={habitability ? (habitability * 100).toFixed(0) : 0} 
-            unit="%" 
-            isHabitability={true}
-          />
+
         </div>
       </div>
 
