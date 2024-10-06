@@ -35,8 +35,6 @@ const fragmentShader = `
   }
 `;
 
-
-
 const vertexShader = `
   varying vec2 vertexUV;
   varying vec3 vertexNormal;
@@ -303,7 +301,6 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', background: '#000' }}>
       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
         <Suspense fallback={null}>
-        <Starfield numStars={1000} />
 
           <Earth/>
           <OrbitControls enableZoom={true} enableRotate={true} />

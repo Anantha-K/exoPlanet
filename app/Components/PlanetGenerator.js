@@ -214,7 +214,11 @@ export default function InteractivePlanetGenerator() {
       });
 
       const planet = await response.json();
+      console.log(planet)
       setHabitability(planet.habitability_score);
+      setVegetation(planet.vegetation);
+      setSeaLEvel(planet.sea_level);
+      set
     } catch (error) {
       console.error('Error generating planet:', error);
     } finally {
@@ -306,9 +310,9 @@ export default function InteractivePlanetGenerator() {
           <Planet parameters={parameters} />
         </Canvas>
         {habitability && (
-          <div className="absolute top-4 right-4 bg-black/50 p-4 rounded">
-            <p className="text-white">Habitability Score: {habitability}</p>
-          </div>
+          <div className="absolute bottom-[700px] right-4 bg-black/50 p-4 rounded">
+<p className="text-white">Habitability Score: {Number(habitability).toFixed(2)}%</p>         
+ </div>
         )}
       </div>
     </motion.div>
