@@ -11,12 +11,25 @@
   font-style: normal;
 }
 
+.stats-panel.transitioning {
+  transition: all 300ms ease-in-out;
+}
 
+.stats-panel {
+  transition: all 300ms ease-in-out;
+}
+
+.slider-transition {
+  transition: all 200ms ease-in-out;
+}
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 }
+
+
+
 
 @layer base {
   :root {
