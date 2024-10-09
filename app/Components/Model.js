@@ -282,9 +282,8 @@ const Model = () => {
   const checkHabitability = useCallback(async (values) => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://nasaspaceapps-0xn3.onrender.com/receiveData', {
+      const response = await fetch('https://nasa-2-a426.onrender.com/receiveData', {
         method: 'POST',
-        mode:'no-cors',
         headers: {
           'Content-Type': 'application/json',
         },
