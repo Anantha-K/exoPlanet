@@ -172,7 +172,7 @@ const PlanetControls = ({ planetValues, onUpdate }) => {
     <Sheet>
     <SheetTrigger asChild>
       <Button
-        className="fixed lg:top-20 lg:right-8 bottom-4 right-4 lg:bottom-auto bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 z-50"
+        className="fixed lg:top-48 lg:right-8 bottom-4 right-4 lg:bottom-auto bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 z-50"
         size="lg"
       >
         <Settings2 className="mr-2 h-5 w-5" />
