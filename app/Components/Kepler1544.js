@@ -260,14 +260,14 @@ function Planet() {
   );
 }
 
-export default function Kepler1544() {
+export default function Kepler1544({vegetation,seaLevel}) {
   return (
     <Canvas style={{ width: '100vw', height: '100vh' }}>
       <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={75} />
       <OrbitControls />
       <Starfield numStars={1000} />
 
-      <Planet />
+      <Planet vegetationProp={vegetation} seaLevelProp={seaLevel} />
     </Canvas>
   );
 }

@@ -1,6 +1,5 @@
 
-
-import React, { useRef, Suspense, useMemo } from 'react';
+import React, { useRef, Suspense, useMemo, useEffect } from 'react';
 import { Canvas, useLoader, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { TextureLoader } from 'three';
@@ -132,18 +131,7 @@ function Starfield({ numStars = 500 }) {
   );
 }
 
-
-function Earth() {
-  const details = {
-    "mass":1,
-    "radius":1,
-    "distance":1,
-    "orbitalPeriod":365,
-    "vegetation":56,
-    "temperature":288,
-
-
-  }
+function Earth({ vegetationProp, seaLevelProp }) {
   const earthRef = useRef();
   const groundRef = useRef();
   const landRef = useRef();
@@ -170,12 +158,9 @@ function Earth() {
   } = useControls({
     temperature: { value: 0, min: 0, max: 1, step: 0.01 },
     sunProximity: { value: 0, min: 0, max: 1, step: 0.01 },
-    vegetation: { value: 0, min: 0, max: .5, step: 0.01 },
-    seaLevel: { value: 1, min: 0, max: 1, step: 0.01 }
+    vegetation: { value: vegetationProp ?? 0, min: vegetationProp/100 ?? 0 , max: 0.5, step: 0.01 },
+    seaLevel: { value: seaLevelProp ?? 1, min: vegetationProp/100 ?? 0, max: 1, step: 0.01 }
   });
-
-
-
 
   useFrame(() => {
     const speed = 0.002;
@@ -186,8 +171,8 @@ function Earth() {
     });
   });
 
-  const earthMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+  const materials = useMemo(() => {
+    const earthMat = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
@@ -200,10 +185,8 @@ function Earth() {
       transparent: true,
       depthWrite: false
     });
-  }, [earthTexture, sunProximity, temperature]);
 
-  const groundMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    const groundMat = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
@@ -216,27 +199,23 @@ function Earth() {
       transparent: true,
       depthWrite: false
     });
-  }, [groundTexture, temperature, seaLevel]);
 
-  const landMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    const landMat = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
         globeTexture: { value: landTexture },
         scale: { value: 0 },
-        vegetation: { value: vegetation },
+        vegetation: { value: vegetationProp ?? 0 },
         temperature: { value: 0 },
-        opacity: { value: vegetation }
+        opacity: { value: vegetationProp ?? 0 }
       },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
-  }, [landTexture, vegetation]);
 
-  const seaMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    const seaMat = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
@@ -244,16 +223,14 @@ function Earth() {
         scale: { value: 0 },
         vegetation: { value: 0 },
         temperature: { value: 0 },
-        opacity: { value: 1 }
+        opacity: { value: seaLevelProp ?? 1 }
       },
       transparent: true,
       depthWrite: true,
       blending: THREE.AdditiveBlending
     });
-  }, [seaTexture, seaLevel]);
 
-  const atmosphereMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    const atmosphereMat = new THREE.ShaderMaterial({
       vertexShader: atmosphereVertexShader,
       fragmentShader: atmosphereFragmentShader,
       blending: THREE.AdditiveBlending,
@@ -264,31 +241,88 @@ function Earth() {
         sunProximity: { value: sunProximity }
       }
     });
-  }, [temperature, sunProximity]);
+
+    return {
+      earthMat,
+      groundMat,
+      landMat,
+      seaMat,
+      atmosphereMat
+    };
+  }, [earthTexture, groundTexture, landTexture, seaTexture, vegetationProp, seaLevelProp]);
+  // Update uniforms when control values change
+  // useEffect(() => {
+  //   if (materials) {
+  //     materials.earthMat.uniforms.scale.value = sunProximity;
+  //     materials.earthMat.uniforms.temperature.value = temperature;
+      
+  //     materials.groundMat.uniforms.temperature.value = temperature;
+  //     materials.groundMat.uniforms.opacity.value = 1 - seaLevel;
+      
+  //     materials.landMat.uniforms.vegetation.value = vegetation;
+  //     materials.landMat.uniforms.opacity.value = vegetation;
+      
+  //     materials.seaMat.uniforms.opacity.value = seaLevel;
+      
+  //     materials.atmosphereMat.uniforms.temperature.value = temperature;
+  //     materials.atmosphereMat.uniforms.sunProximity.value = sunProximity;
+  //   }
+  // }, [materials, temperature, sunProximity, vegetation, seaLevel]);
+
+  useEffect(() => {
+    if (materials) {
+      // Update based on control values
+      materials.earthMat.uniforms.scale.value = sunProximity;
+      materials.earthMat.uniforms.temperature.value = temperature;
+      
+      materials.groundMat.uniforms.temperature.value = temperature;
+      materials.groundMat.uniforms.opacity.value = 1 - seaLevel;
+      
+      materials.landMat.uniforms.vegetation.value = vegetation;
+      materials.landMat.uniforms.opacity.value = vegetation;
+      
+      materials.seaMat.uniforms.opacity.value = seaLevelProp;
+      
+      materials.atmosphereMat.uniforms.temperature.value = temperature;
+      materials.atmosphereMat.uniforms.sunProximity.value = sunProximity;
+
+      // Update based on props
+      if (vegetationProp !== undefined) {
+        materials.landMat.uniforms.vegetation.value = vegetationProp;
+        materials.landMat.uniforms.opacity.value = vegetationProp;
+      }
+      if (seaLevelProp !== undefined) {
+        materials.seaMat.uniforms.opacity.value = seaLevelProp;
+      }
+    }
+  }, [materials, temperature, sunProximity, vegetation, seaLevel, vegetationProp, seaLevelProp]);
 
   return (
     <>
       <mesh ref={earthRef}>
         <sphereGeometry args={[5, 50, 50]} />
-        <primitive object={earthMaterial} attach="material" />
+        <primitive object={materials.earthMat} attach="material" />
       </mesh>
 
       <mesh ref={groundRef}>
         <sphereGeometry args={[5.005, 50, 50]} />
-        <primitive object={groundMaterial} attach="material" />
+        <primitive object={materials.groundMat} attach="material" />
       </mesh>
 
       <mesh ref={landRef}>
         <sphereGeometry args={[5.01, 50, 50]} />
-        <primitive object={landMaterial} attach="material" />
+        <primitive object={materials.landMat} attach="material" />
       </mesh>
 
       <mesh ref={seaRef}>
         <sphereGeometry args={[5.02, 50, 50]} />
-        <primitive object={seaMaterial} attach="material" />
+        <primitive object={materials.seaMat} attach="material" />
       </mesh>
 
-     
+      <mesh ref={atmosphereRef} scale={1.1}>
+        <sphereGeometry args={[5, 50, 50]} />
+        <primitive object={materials.atmosphereMat} attach="material" />
+      </mesh>
 
       <directionalLight position={[-2, -0.5, 1.5]} intensity={1.5} />
       <ambientLight intensity={0.2} />
@@ -296,21 +330,21 @@ function Earth() {
   );
 }
 
-export default function App() {
+export default function App({ vegetation, seaLevel }) {
+  console.log(seaLevel)
+
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#000' }}>
       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
         <Suspense fallback={null}>
-
-          <Earth/>
+          <Earth vegetationProp={vegetation} seaLevelProp={seaLevel} />
+          
           <OrbitControls enableZoom={true} enableRotate={true} />
         </Suspense>
       </Canvas>
     </div>
   );
 }
-
-
 
 
 

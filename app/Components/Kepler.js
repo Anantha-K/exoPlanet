@@ -66,6 +66,8 @@ const atmosphereFragmentShader = `
 `;
 
 
+
+
 function Starfield({ numStars = 500 }) {
     const starsRef = useRef();
     
@@ -131,172 +133,175 @@ function Starfield({ numStars = 500 }) {
   }
   
 
-function Earth() {
-  const earthRef = useRef();
-  const groundRef = useRef();
-  const landRef = useRef();
-  const seaRef = useRef();
-  const atmosphereRef = useRef();
+  function Earth({ vegetationProp = 0, seaLevelProp = 0 }) {
+    const earthRef = useRef();
+    const groundRef = useRef();
+    const landRef = useRef();
+    const seaRef = useRef();
+    const atmosphereRef = useRef();
   
-  const [
-    groundTexture,
-    earthTexture,
-    landTexture,
-    seaTexture
-  ] = useLoader(TextureLoader, [
-    '/keplarland.png',
-    '/keplarveg.png',
-  ]);
-
-  const {
-    Temperature,
-    sunProximity,
-    Vegetation,
-    SeaLevel,
-    Brightness,
-    AtmosphereIntensity,
-    rotationSpeed
-  } = useControls({
-    Temperature: { value: 0, min: 0, max: 1, step: 0.01 },
-    sunProximity: { value: 0, min: 0, max: 1, step: 0.01 },
-    Vegetation: { value: 0, min: 0, max: .5, step: 0.01 },
-    SeaLevel: { value: 1, min: 0, max: 1, step: 0.01 },
-    Brightness: { value: 1.2, min: 0.1, max: 2, step: 0.01 },
-    AtmosphereIntensity: { value: 2.5, min: 1.3, max: 5, step: 0.1 },
-    rotationSpeed: { value: 0.001, min: 0, max: 0.01, step: 0.0001 }
-  });
-
-  useFrame(() => {
-    [earthRef, groundRef, landRef, seaRef, atmosphereRef].forEach(ref => {
-      if (ref.current) {
-        ref.current.rotation.y += rotationSpeed;
-      }
+    // Ensure vegetationProp and seaLevelProp are numbers
+    const vegetation = Number(vegetationProp) || 0;
+    const seaLevel = Number(seaLevelProp) || 0;
+  
+    const [
+      groundTexture,
+      earthTexture,
+      landTexture,
+      seaTexture
+    ] = useLoader(TextureLoader, [
+      '/keplarland.png',
+      '/keplarveg.png',
+    ]);
+  
+    const {
+      Temperature,
+      sunProximity,
+      Brightness,
+      AtmosphereIntensity,
+      rotationSpeed
+    } = useControls({
+      Temperature: { value: 0, min: 0, max: 1, step: 0.01 },
+      sunProximity: { value: 0, min: 0, max: 1, step: 0.01 },
+      Brightness: { value: 1.2, min: 0.1, max: 2, step: 0.01 },
+      AtmosphereIntensity: { value: 2.5, min: 1.3, max: 5, step: 0.1 },
+      rotationSpeed: { value: 0.001, min: 0, max: 0.01, step: 0.0001 }
     });
-  });
-
-  const earthMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        globeTexture: { value: earthTexture },
-        scale: { value: sunProximity },
-        Vegetation: { value: 0 },
-        Temperature: { value: Temperature },
-        opacity: { value: 1 }
-      },
-      transparent: true,
-      depthWrite: false
+    useFrame(() => {
+      [earthRef, groundRef, landRef, seaRef, atmosphereRef].forEach(ref => {
+        if (ref.current) {
+          ref.current.rotation.y += rotationSpeed;
+        }
+      });
     });
-  }, [earthTexture, sunProximity, Temperature]);
+  
+    const earthMaterial = useMemo(() => {
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          globeTexture: { value: earthTexture },
+          scale: { value: sunProximity },
+          Vegetation: { value: 0 },
+          Temperature: { value: Temperature },
+          opacity: { value: 1 }
+        },
+        transparent: true,
+        depthWrite: false
+      });
+    }, [earthTexture, sunProximity, Temperature]);
+  
+    const groundMaterial = useMemo(() => {
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          globeTexture: { value: groundTexture },
+          scale: { value: 0 },
+          Vegetation: { value: 0 },
+          Temperature: { value: Temperature },
+          opacity: { value: 1 - seaLevelProp }  // Use seaLevelProp here
+        },
+        transparent: true,
+        depthWrite: false
+      });
+    }, [groundTexture, Temperature, seaLevelProp]);
+  
+    const landMaterial = useMemo(() => {
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          globeTexture: { value: landTexture },
+          scale: { value: 0 },
+          Vegetation: { value: vegetationProp },  // Use vegetationProp here
+          Temperature: { value: 0 },
+          opacity: { value: vegetationProp }  // Use vegetationProp for opacity
+        },
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+    }, [landTexture, vegetationProp]);
+  
+    const seaMaterial = useMemo(() => {
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          globeTexture: { value: seaTexture },
+          scale: { value: 0 },
+          Vegetation: { value: 0 },
+          Temperature: { value: 0 },
+          opacity: { value: seaLevelProp }  // Use seaLevelProp for opacity
+        },
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+    }, [seaTexture, seaLevelProp]);
+  
+    const atmosphereMaterial = useMemo(() => {
+      return new THREE.ShaderMaterial({
+        vertexShader: atmosphereVertexShader,
+        fragmentShader: atmosphereFragmentShader,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        transparent: true,
+        uniforms: {
+          AtmosphereIntensity: { value: AtmosphereIntensity }
+        }
+      });
+    }, [AtmosphereIntensity]);
+  
+    return (
+      <>
+        <mesh ref={earthRef}>
+          <sphereGeometry args={[5, 50, 50]} />
+          <primitive object={earthMaterial} attach="material" />
+        </mesh>
+  
+        <mesh ref={groundRef}>
+          <sphereGeometry args={[5.005, 50, 50]} />
+          <primitive object={groundMaterial} attach="material" />
+        </mesh>
+  
+        <mesh ref={landRef}>
+          <sphereGeometry args={[5.01, 50, 50]} />
+          <primitive object={landMaterial} attach="material" />
+        </mesh>
+  
+        <mesh ref={seaRef}>
+          <sphereGeometry args={[5.02, 50, 50]} />
+          <primitive object={seaMaterial} attach="material" />
+        </mesh>
+  
+        <mesh ref={atmosphereRef} scale={[1.2, 1.2, 1.2]}>
+          <sphereGeometry args={[5, 50, 50]} />
+          <primitive object={atmosphereMaterial} attach="material" />
+        </mesh>
+  
+        <directionalLight position={[-2, -0.5, 1.5]} intensity={1.5} />
+        <ambientLight intensity={0.2} />
+      </>
+    );
+  }
+  
 
-  const groundMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        globeTexture: { value: groundTexture },
-        scale: { value: 0 },
-        Vegetation: { value: 0 },
-        Temperature: { value: Temperature },
-        opacity: { value: 1 - SeaLevel }
-      },
-      transparent: true,
-      depthWrite: false
-    });
-  }, [groundTexture, Temperature, SeaLevel]);
+  export default function Kepler({ vegetation, seaLevel }) {
+    // Ensure values are numbers
 
-  const landMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        globeTexture: { value: landTexture },
-        scale: { value: 0 },
-        Vegetation: { value: Vegetation },
-        Temperature: { value: 0 },
-        opacity: { value: Vegetation }
-      },
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    });
-  }, [landTexture, Vegetation]);
+  
+    return (
+      <div style={{ width: '100vw', height: '100vh', background: '#000', position: 'relative' }}>
+        <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+          <Suspense fallback={null}>
+            <Starfield numStars={1000} />
+            <Earth vegetationProp={vegetation} seaLevelProp={seaLevel} />
+            <OrbitControls enableZoom={true} enableRotate={true} />
+          </Suspense>
+        </Canvas>
 
-  const seaMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        globeTexture: { value: seaTexture },
-        scale: { value: 0 },
-        Vegetation: { value: 0 },
-        Temperature: { value: 0 },
-        opacity: { value: SeaLevel }
-      },
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    });
-  }, [seaTexture, SeaLevel]);
-
-  const atmosphereMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader: atmosphereVertexShader,
-      fragmentShader: atmosphereFragmentShader,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-      transparent: true,
-      uniforms: {
-        AtmosphereIntensity: { value: AtmosphereIntensity }
-      }
-    });
-  }, [AtmosphereIntensity]);
-
-  return (
-    <>
-      <mesh ref={earthRef}>
-        <sphereGeometry args={[5, 50, 50]} />
-        <primitive object={earthMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={groundRef}>
-        <sphereGeometry args={[5.005, 50, 50]} />
-        <primitive object={groundMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={landRef}>
-        <sphereGeometry args={[5.01, 50, 50]} />
-        <primitive object={landMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={seaRef}>
-        <sphereGeometry args={[5.02, 50, 50]} />
-        <primitive object={seaMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={atmosphereRef} scale={[1.2, 1.2, 1.2]}>
-        <sphereGeometry args={[5, 50, 50]} />
-        <primitive object={atmosphereMaterial} attach="material" />
-      </mesh>
-
-      <directionalLight position={[-2, -0.5, 1.5]} intensity={1.5} />
-      <ambientLight intensity={0.2} />
-    </>
-  );
-}
-
-export default function Kepler() {
-  return (
-    <div style={{ width: '100vw', height: '100vh', background: '#000' }}>
-      <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-        <Suspense fallback={null}>
-        <Starfield numStars={1000} />
-
-          <Earth/>
-          <OrbitControls enableZoom={true} enableRotate={true} />
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-}
+      </div>
+    );
+  }
