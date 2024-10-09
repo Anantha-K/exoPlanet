@@ -135,7 +135,7 @@ function Planet({ vegetationProp, seaLevelProp }) {
 
   const [landTexture, vegTexture, cloudsTexture] = useLoader(TextureLoader, [
     '/kepler1544b.jpg',
-    '/keplernew.png',
+    '/Keplernew.png',
     '/clouds.jpg'
   ]);
 
