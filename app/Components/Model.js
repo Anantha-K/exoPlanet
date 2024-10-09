@@ -284,6 +284,7 @@ const Model = () => {
     try {
       const response = await fetch('https://nasaspaceapps-0xn3.onrender.com/receiveData', {
         method: 'POST',
+        mode:'no-cors',
         headers: {
           'Content-Type': 'application/json',
         },
